@@ -1,26 +1,24 @@
+// import express and path
 const express  =  require('express');
 const path = require('path');
+
+// importing common rootDir
 const rootDir = require('../util/path');
-const adminData = require('../routes/admin');
+
+// importing controllers
+const shopController = require('../controllers/shop');
+
 
 const router =  express.Router();
 
-router.get('/',(req, res, next) => {
-    // res.send('<h1>Hello from Express!</h1>');
-    // console.log('products array ====>',adminData.products);
-    // res.sendFile(path.join(rootDir,'views','shop.html'));
-    const products = adminData.products;
-    res.render('shop',
-        {
-            prods:products,
-            pageTitle:"Shop",
-            path:'/',
-            hasProducts:products.length > 0,
-            activeShop:true,
-            productCSS:true
-        });
-});
+router.get('/',shopController.getIndex);
 
+router.get('/products',shopController.getProducts);
 
+router.get('/cart',shopController.getCart);
+
+router.get('/orders',shopController.getOrders);
+
+router.get('/checkout',shopController.getCheckout);
 
 module.exports = router;

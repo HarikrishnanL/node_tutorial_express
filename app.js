@@ -4,7 +4,7 @@ const path = require('path');
 // const expressHbs = require('express-handlebars');
 
 // importing database
-const db = require('./util/database');
+const sequelize = require('./util/database');
 
 // routes imports
 const adminRoutes = require('./routes/admin');
@@ -31,4 +31,14 @@ app.use(shopRoutes);
 
 app.use(errorController.get404);
 
-app.listen(3000);
+sequelize.sync()
+    .then(result=>{
+        // console.log('result after synying with database ======>',result);
+        app.listen(3000);
+
+    })
+    .catch(err=>{
+        console.log('error while creating a tables =====>',err);
+    });
+
+// app.listen(3000);

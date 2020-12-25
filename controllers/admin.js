@@ -13,17 +13,22 @@ exports.getAddProduct = (req, res, next) => {
 exports.postAddProduct = (req,res,next)=>{
     const title = req.body.title;
     const imageUrl = req.body.imageUrl;
+    console.log('imageUrl',imageUrl);
     const price = req.body.price;
     const description = req.body.description;
 
-    const product = new Product(null,title,imageUrl,description,price);
-    product.save().then(()=>{
-            res.redirect('/');
+    Product.create({
+        title:title,
+        price:price,
+        imageUrl:imageUrl,
+        description:description
+    })
+        .then(result=>{
+            console.log('result from adding a product ',result);
         })
-        .catch(err=>{
-            console.log('error while saving a product =====>',err);
+        .catch(err =>{
+            console.log('error adding product ====>',err);
         });
-
 };
 
 exports.getEditProduct = (req, res, next) => {
@@ -70,6 +75,8 @@ exports.getProducts = (req,res,next)=>{
                 path:'/admin/products'
             });
     });
+
+    Product.findAll().then().catch();
 };
 
 exports.postDeleteProduct = (req,res,next)=>{

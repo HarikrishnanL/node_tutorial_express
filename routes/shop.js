@@ -1,9 +1,6 @@
 // import express and path
 const express  =  require('express');
-const path = require('path');
 
-// importing common rootDir
-const rootDir = require('../util/path');
 
 // importing controllers
 const shopController = require('../controllers/shop');

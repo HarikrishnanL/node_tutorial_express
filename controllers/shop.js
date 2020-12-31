@@ -10,7 +10,8 @@ exports.getProducts = (req, res, next) => {
                 {
                     prods:products,
                     pageTitle:"All Products",
-                    path:'/products'
+                    path:'/products',
+                    isAuthenticated:req.session.isLoggedIn
                 });
         })
         .catch(err=>{
@@ -30,7 +31,8 @@ exports.getProduct = (req,res,next)=>{
                 {
                     product:product,
                     pageTitle:product.title,
-                    path:'/products'
+                    path:'/products',
+                    isAuthenticated:req.session.isLoggedIn
                 });
         })
         .catch(err=>{
@@ -46,7 +48,8 @@ exports.getIndex = (req,res,next)=>{
                 {
                     prods:products,
                     pageTitle:"Shop",
-                    path:'/'
+                    path:'/',
+                    isAuthenticated:req.session.isLoggedIn
                 });
         })
         .catch(err=>{
@@ -59,13 +62,13 @@ exports.getCart = (req,res,next) =>{
       .populate('cart.items.productId')
       .execPopulate()
       .then(user=>{
-          console.log('user product=====>',user.cart.items);
         const products = user.cart.items;
         console.log('products from user collection ====>',products);
           res.render('shop/cart',{
               path:'/cart',
               pageTitle:'Your Cart',
-              products:products
+              products:products,
+              isAuthenticated:req.session.isLoggedIn
           })
       })
       .catch(err=>console.log('error while fetching a cart====>',err));
@@ -126,13 +129,13 @@ exports.postOrder = (req,res,next)=> {
 };
 
 exports.getOrders = (req,res,next) =>{
-    Order.find({'user.userId':req.user._id})
+    Order.find({'user.userId':req.session.user._id})
         .then(orders=>{
-            console.log('orders ====>',orders);
             res.render('shop/orders',{
                 path:'/orders',
                 pageTitle:'Your Orders',
-                orders:orders
+                orders:orders,
+                isAuthenticated:req.session.isLoggedIn
             });
         })
         .catch(err=>console.log('error while getting a order ====>',err));

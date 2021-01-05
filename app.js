@@ -6,6 +6,7 @@ const session = require('express-session');
 const mongoDBStore = require('connect-mongodb-session')(session);
 const csrf = require('csurf');
 const flash = require('connect-flash');
+const multer = require('multer');
 
 // mongodb connection
 const MONGODB_URI = 'mongodb+srv://hari_007:Hari@cluster0.xbazb.mongodb.net/shop?retryWrites=true&w=majority'
@@ -34,10 +35,33 @@ const store = new mongoDBStore({
 // initializing csurf protection
 const csrfProtection = csrf();
 
+// multer storage initialization
+const fileStorage = multer.diskStorage({
+    destination:(req,file,cb)=>{
+        cb(null,'images');
+    },
+    filename:(req,file,cb)=>{
+        cb(null,new Date().toISOString().replace(/:/g, '-')+'-'+file.originalname);
+    }
+});
+
+// multer file filter description
+const fileFilter = (req,file,cb)=>{
+    if (file.mimetype === 'image/png' ||
+        file.mimetype === 'image/jpg' ||
+        file.mimetype === 'image/jpeg') {
+        cb(null,true);
+    }else{
+        cb(null,false);
+    }
+
+};
+
 app.set('view engine','ejs');
 app.set('views','views');
 
 app.use(bodyParser.urlencoded({extended:false}));
+app.use(multer({storage:fileStorage,fileFilter:fileFilter}).single('image'))
 app.use(express.static(path.join(__dirname,'public')));
 
 app.use(session({
@@ -48,19 +72,8 @@ app.use(session({
 }));
 
 app.use(csrfProtection);
-app.use(flash());
 
-app.use((req,res,next)=>{
-    if (!req.session.user){
-      return next();
-    }
-    User.findById(req.session.user._id)
-        .then(user=>{
-            req.user = user;
-            next();
-        })
-        .catch(err=>console.log('error while finding a user====>',err));
-});
+app.use(flash());
 
 app.use((req,res,next)=>{
     res.locals.isAuthenticated = req.session.isLoggedIn;
@@ -68,12 +81,49 @@ app.use((req,res,next)=>{
     next();
 });
 
+app.use((req,res,next)=>{
+    if (!req.session.user){
+      return next();
+    }
+    User.findById(req.session.user._id)
+        .then(user=>{
+            if (!user){
+                return next();
+            }
+            req.user = user;
+            next();
+        })
+        .catch(err=>{
+            console.log('error while finding a user====>',err);
+            // throw new Error(err);
+            next(new Error(err));
+        });
+});
+
+
+
 app.use('/admin',adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
 
+// 500 error page
+app.get('/500',errorController.get500);
+
 //404 error page
 app.use(errorController.get404);
+
+
+
+app.use((error,req,res,next)=>{
+    console.log('error =====> in app ',error);
+    res.redirect('/500');
+
+    // res.status(500).render('500',{
+    //     pageTitle:'Error!',
+    //     path:'/500',
+    //     // isAuthenticated:req.session.isLoggedIn
+    // });
+});
 
 mongoose.connect(MONGODB_URI,{useUnifiedTopology: true, useNewUrlParser: true })
     .then(connection=>{

@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
+const PDFDocument = require('pdfkit');
+
 // importing models
 const Product = require('../models/product');
 const Order = require('../models/order');
@@ -179,12 +181,43 @@ exports.getInvoice = (req,res,next)=>{
         .then(order=>{
             if (!order){
                 return next(new Error('No order found'))
+
             }
-            if (order.user.userId.toString() !== req.user_id.toString()){
+            if (order.user.userId.toString() !== req.user._id.toString()){
                 return  next(new Error('Unauthorized'));
             }
             const invoiceName = 'invoice'+orderId+'.pdf';
             const invoicePath = path.join('data','invoices',invoiceName);
+
+            const pdfDoc = new PDFDocument();
+            res.setHeader('Content-Type','application/pdf');
+            res.setHeader('Content-Disposition','inline;filename = "'+invoiceName+'"');
+
+            pdfDoc.pipe(fs.createWriteStream(invoicePath));
+            pdfDoc.pipe(res);
+
+            pdfDoc.fontSize(26).text('Invoce',{
+                underline:true
+            });
+
+            pdfDoc.text('----------------------------');
+            let totalPrice = 0 ;
+            order.products.forEach(prod=>{
+               totalPrice += prod.quantity*prod.product.price;
+               pdfDoc.fontSize(14)
+                   .text(
+                   prod.product.title +
+                   ' - ' +
+                   prod.quantity +
+                   ' x ' +
+                   '$' +
+                   prod.product.price
+               );
+            });
+            pdfDoc.text('------------');
+            pdfDoc.fontSize(20).text('Total Price $ '+ totalPrice);
+
+            pdfDoc.end();
             // fs.readFile(invoicePath,(err,data)=>{
             //     if (err){
             //         return next(err);
@@ -194,11 +227,11 @@ exports.getInvoice = (req,res,next)=>{
             //     res.setHeader('Content-Disposition','inline;filename = "'+invoiceName+'"');
             //     res.send(data);
             // });
-            const file = fs.createReadStream(invoicePath);
-                res.setHeader('Content-Type','application/pdf');
+            // const file = fs.createReadStream(invoicePath);
+                // res.setHeader('Content-Type','application/pdf');
                 // res.setHeader('Content-Disposition','attachment;filename = "'+invoiceName+'"');
-                res.setHeader('Content-Disposition','inline;filename = "'+invoiceName+'"');
-                file.pipe(res);
+                // res.setHeader('Content-Disposition','inline;filename = "'+invoiceName+'"');
+                // file.pipe(res);
                 // res.send(data);
 
 

@@ -63,6 +63,7 @@ app.set('views','views');
 app.use(bodyParser.urlencoded({extended:false}));
 app.use(multer({storage:fileStorage,fileFilter:fileFilter}).single('image'))
 app.use(express.static(path.join(__dirname,'public')));
+app.use('/images',express.static(path.join(__dirname,'images')));
 
 app.use(session({
     secret:'my string',
@@ -116,13 +117,13 @@ app.use(errorController.get404);
 
 app.use((error,req,res,next)=>{
     console.log('error =====> in app ',error);
-    res.redirect('/500');
+    // res.redirect('/500');
 
-    // res.status(500).render('500',{
-    //     pageTitle:'Error!',
-    //     path:'/500',
-    //     // isAuthenticated:req.session.isLoggedIn
-    // });
+    res.status(500).render('500',{
+        pageTitle:'Error!',
+        path:'/500',
+        isAuthenticated:req.session.isLoggedIn
+    });
 });
 
 mongoose.connect(MONGODB_URI,{useUnifiedTopology: true, useNewUrlParser: true })

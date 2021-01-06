@@ -2,6 +2,7 @@ const Product = require('../models/product');
 const {validationResult} = require('express-validator');
 
 exports.getAddProduct = (req, res, next) => {
+
     res.render('admin/edit-product',
         {
             pageTitle:"Add Product",
@@ -16,7 +17,7 @@ exports.getAddProduct = (req, res, next) => {
 
 exports.postAddProduct = (req,res,next)=>{
     const title = req.body.title;
-    // const imageUrl = req.body.imageUrl;
+    // const image = req.body.imageUrl;
     const image = req.file;
     const price = req.body.price;
     const description = req.body.description;
@@ -58,7 +59,7 @@ exports.postAddProduct = (req,res,next)=>{
         );
     }
 
-    const imageUrl = image.path;
+     const imageUrl = image.path;
 
     const product = new Product(
         {
@@ -136,7 +137,8 @@ exports.postEditProduct = (req,res,next)=>{
     const prodId = req.body.productId;
     const updatedTitle = req.body.title;
     const updatedPrice = req.body.price;
-    const updatedImageUrl = req.body.imageUrl;
+    // const updatedImageUrl = req.body.imageUrl;
+    const image = req.file;
     const updatedDescription = req.body.description;
 
     const errors = validationResult(req);
@@ -149,7 +151,6 @@ exports.postEditProduct = (req,res,next)=>{
                 hasError:true,
                 product:{
                     title:updatedTitle,
-                    imageUrl:updatedImageUrl,
                     price:updatedPrice,
                     description:updatedDescription,
                     _id:prodId
@@ -167,7 +168,10 @@ exports.postEditProduct = (req,res,next)=>{
           }
             product.title = updatedTitle;
             product.price = updatedPrice;
-            product.imageUrl = updatedImageUrl;
+            if (image){
+                product.imageUrl = image.path;
+            }
+
             product.description = updatedDescription;
             return  product.save()
                 .then(result=>{
@@ -186,6 +190,7 @@ exports.postEditProduct = (req,res,next)=>{
 };
 
 exports.getProducts = (req,res,next)=>{
+
     Product.find({userId:req.user._id})
         // .select('title price -_id')
         // .populate('userId')
